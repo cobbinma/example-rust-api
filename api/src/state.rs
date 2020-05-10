@@ -1,5 +1,6 @@
 use database;
 use database::postgres::Postgres;
+use async_std::prelude::*;
 
 #[derive(Debug)]
 pub(crate) struct State {
@@ -8,9 +9,7 @@ pub(crate) struct State {
 
 impl State {
     pub(crate) async fn new() -> tide::Result<Self> {
-        database::migration::run().await?;
-
-        let db = Postgres::new().await?;
+        let (db, ()) = Postgres::new().try_join(database::migration::run()).await?;
 
         Ok(Self { db })
     }
