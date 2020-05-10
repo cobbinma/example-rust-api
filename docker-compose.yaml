@@ -1,0 +1,15 @@
+version: '3'
+services:
+  example-db:
+    image: "postgres"
+    container_name: "example-rust_db"
+    environment:
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=example
+      - POSTGRES_USER=example
+    ports:
+      - "5432:5432"
+    volumes:
+      - example-rust_data:/var/lib/postgresql/data
+volumes:
+  example-rust_data:
