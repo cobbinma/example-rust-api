@@ -1,6 +1,6 @@
-use dotenv::dotenv;
 use async_std::task;
 use database;
+use dotenv::dotenv;
 
 mod state;
 
@@ -10,7 +10,7 @@ fn main() -> tide::Result<()> {
     task::block_on(async {
         dotenv().ok();
         database::migration::run().await?;
-        
+
         let state = State::new().await?;
         let mut app = tide::with_state(state);
 
