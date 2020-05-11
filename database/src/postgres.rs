@@ -1,5 +1,5 @@
 use models::pet::Pet;
-use sqlx::PgPool;
+use sqlx::{PgPool};
 use std::env;
 
 use crate::db_error::DatabaseError;
@@ -35,6 +35,38 @@ impl Postgres {
     }
 
     pub async fn create_pet(&self, pet: &Pet) -> Result<(), DatabaseError> {
-        unimplemented!();
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("INSERT INTO pets (id, name, tag) VALUES ($1, $2, $3)")
+            .bind(pet.id)
+            .bind(pet.name.clone())
+            .bind(pet.tag.clone())
+            .execute(&mut tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn find_all(pool: &PgPool) -> Result<Vec<Pet>, DatabaseError> {
+        let mut pets = vec![];
+        let recs = sqlx::query!(
+            r#"
+                SELECT id, name, tag
+                    FROM pets
+                ORDER BY id
+            "#
+        )
+            .fetch_all(pool)
+            .await?;
+
+        for rec in recs {
+            pets.push(Pet {
+                id: rec.id,
+                name: rec.name,
+                tag: rec.tag
+            });
+        }
+
+        Ok(pets)
     }
 }
