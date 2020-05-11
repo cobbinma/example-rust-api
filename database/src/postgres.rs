@@ -47,7 +47,7 @@ impl Postgres {
         Ok(())
     }
 
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<Pet>, DatabaseError> {
+    pub async fn find_all(&self) -> Result<Vec<Pet>, DatabaseError> {
         let mut pets = vec![];
         let recs = sqlx::query!(
             r#"
@@ -56,7 +56,7 @@ impl Postgres {
                 ORDER BY id
             "#
         )
-        .fetch_all(pool)
+        .fetch_all(&self.pool)
         .await?;
 
         for rec in recs {
