@@ -1,5 +1,5 @@
 use models::pet::Pet;
-use sqlx::{PgPool};
+use sqlx::PgPool;
 use std::env;
 
 use crate::db_error::DatabaseError;
@@ -17,12 +17,12 @@ impl Postgres {
         Ok(Postgres { pool })
     }
 
-    pub async fn get_pet(&self, id: i64) -> Result<Pet, DatabaseError> {
+    pub async fn get_pet(&self, id: i32) -> Result<Pet, DatabaseError> {
         let rec = sqlx::query!(
             r#"
-            SELECT * FROM pets WHERE id = $1
-        "#,
-            id as i32
+                SELECT * FROM pets WHERE id = $1
+            "#,
+            id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -56,14 +56,14 @@ impl Postgres {
                 ORDER BY id
             "#
         )
-            .fetch_all(pool)
-            .await?;
+        .fetch_all(pool)
+        .await?;
 
         for rec in recs {
             pets.push(Pet {
                 id: rec.id,
                 name: rec.name,
-                tag: rec.tag
+                tag: rec.tag,
             });
         }
 
