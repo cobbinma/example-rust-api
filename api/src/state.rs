@@ -1,6 +1,6 @@
+use async_std::prelude::*;
 use database;
 use database::postgres::Postgres;
-use async_std::prelude::*;
 
 #[derive(Debug)]
 pub(crate) struct State {
