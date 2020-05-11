@@ -1,3 +1,4 @@
+use models::pet::Pet;
 use sqlx::PgPool;
 use std::env;
 
@@ -14,5 +15,26 @@ impl Postgres {
         let pool = PgPool::new(&database_url).await?;
 
         Ok(Postgres { pool })
+    }
+
+    pub async fn get_pet(&self, id: i64) -> Result<Pet, DatabaseError> {
+        let rec = sqlx::query!(
+            r#"
+            SELECT * FROM pets WHERE id = $1
+        "#,
+            id as i32
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(Pet {
+            id: rec.id,
+            name: rec.name,
+            tag: rec.tag,
+        })
+    }
+
+    pub async fn create_pet(&self, pet: &Pet) -> Result<(), DatabaseError> {
+        unimplemented!();
     }
 }
