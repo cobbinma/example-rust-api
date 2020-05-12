@@ -1,8 +1,11 @@
 use models::pet::Pet;
 use sqlx::PgPool;
 use std::env;
+use std::result::Result;
 
 use crate::db_error::DatabaseError;
+
+type DatabaseResult<T> = Result<T, DatabaseError>;
 
 #[derive(Debug)]
 pub struct Postgres {
@@ -10,7 +13,7 @@ pub struct Postgres {
 }
 
 impl Postgres {
-    pub async fn new() -> Result<Postgres, DatabaseError> {
+    pub async fn new() -> DatabaseResult<Postgres> {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
         let pool = PgPool::new(&database_url).await?;
 
@@ -34,7 +37,7 @@ impl Postgres {
         })
     }
 
-    pub async fn create_pet(&self, pet: &Pet) -> Result<(), DatabaseError> {
+    pub async fn create_pet(&self, pet: &Pet) -> DatabaseResult<()> {
         let mut tx = self.pool.begin().await?;
         sqlx::query("INSERT INTO pets (id, name, tag) VALUES ($1, $2, $3)")
             .bind(pet.id)
@@ -47,7 +50,7 @@ impl Postgres {
         Ok(())
     }
 
-    pub async fn find_all(&self) -> Result<Vec<Pet>, DatabaseError> {
+    pub async fn find_all(&self) -> DatabaseResult<Vec<Pet>> {
         let mut pets = vec![];
         let recs = sqlx::query!(
             r#"
