@@ -46,3 +46,13 @@ impl From<SQLXError> for DatabaseError {
         DatabaseError::new(&err.to_string())
     }
 }
+
+impl From<std::boxed::Box<dyn std::error::Error + std::marker::Send + std::marker::Sync>>
+    for DatabaseError
+{
+    fn from(
+        err: std::boxed::Box<dyn std::error::Error + std::marker::Send + std::marker::Sync>,
+    ) -> Self {
+        DatabaseError::new(&err.to_string())
+    }
+}
