@@ -38,7 +38,7 @@ impl Postgres {
             .field("id")
             .field("name")
             .field("tag")
-            .values(&["?, ?, ?"])
+            .values(&["$1, $2, $3"])
             .sql()?;
 
         let mut tx = self.pool.begin().await?;
