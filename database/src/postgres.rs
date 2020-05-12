@@ -1,4 +1,5 @@
 use models::pet::Pet;
+use sqlx::postgres::PgQueryAs;
 use sqlx::PgPool;
 use std::env;
 use std::result::Result;
@@ -21,20 +22,12 @@ impl Postgres {
     }
 
     pub async fn get_pet(&self, id: i32) -> Result<Pet, DatabaseError> {
-        let rec = sqlx::query!(
-            r#"
-                SELECT * FROM pets WHERE id = $1
-            "#,
-            id
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let pet = sqlx::query_as::<_, Pet>("SELECT * FROM pets WHERE id = $1")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?;
 
-        Ok(Pet {
-            id: rec.id,
-            name: rec.name,
-            tag: rec.tag,
-        })
+        Ok(pet)
     }
 
     pub async fn create_pet(&self, pet: &Pet) -> DatabaseResult<()> {
@@ -51,24 +44,9 @@ impl Postgres {
     }
 
     pub async fn find_all(&self) -> DatabaseResult<Vec<Pet>> {
-        let mut pets = vec![];
-        let recs = sqlx::query!(
-            r#"
-                SELECT id, name, tag
-                    FROM pets
-                ORDER BY id
-            "#
-        )
-        .fetch_all(&self.pool)
-        .await?;
-
-        for rec in recs {
-            pets.push(Pet {
-                id: rec.id,
-                name: rec.name,
-                tag: rec.tag,
-            });
-        }
+        let pets = sqlx::query_as::<_, Pet>("SELECT id, name, tag FROM pets ORDER BY id")
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(pets)
     }
