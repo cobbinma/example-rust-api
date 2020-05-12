@@ -2,6 +2,8 @@
 
 This is an example Rust REST API using [Tide](https://github.com/http-rs/tide) and [SQLX](https://github.com/launchbadge/sqlx).
 
+To run you must have rust installed.
+
 1. Run `docker-compose up` to start Postgres database.
 2. Use `cargo run` to start API
 
