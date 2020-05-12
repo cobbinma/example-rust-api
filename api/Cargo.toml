@@ -15,4 +15,4 @@ async-std = { version = "1.5.0", features = ["attributes"] }
 refinery = { version = "0.2.1", features = ["postgres"]}
 postgres = "0.17.3"
 env_logger = "0.7.1"
-log = "0.4.0"
+femme = "1.3.0"

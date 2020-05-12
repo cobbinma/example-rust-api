@@ -1,5 +1,6 @@
 use async_std::task;
 use dotenv::dotenv;
+use tide::log;
 
 mod state;
 mod handlers;
@@ -8,8 +9,8 @@ use state::State;
 
 fn main() -> tide::Result<()> {
     task::block_on(async {
+        femme::ndjson::Logger::new().start(log::Level::Info.to_level_filter()).unwrap();
         dotenv().ok();
-        env_logger::init();
 
         let state = State::new().await?;
         let mut app = tide::with_state(state);
