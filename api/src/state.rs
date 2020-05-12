@@ -4,7 +4,7 @@ use database::postgres::Postgres;
 
 #[derive(Debug)]
 pub(crate) struct State {
-    pub db: Postgres,
+    db: Postgres,
 }
 
 impl State {
@@ -12,5 +12,9 @@ impl State {
         let (db, ()) = Postgres::new().try_join(database::migration::run()).await?;
 
         Ok(Self { db })
+    }
+
+    pub fn db(&self) -> &Postgres {
+        &self.db
     }
 }

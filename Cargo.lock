@@ -408,6 +408,7 @@ dependencies = [
  "models 0.1.0",
  "postgres 0.17.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "refinery 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sql-builder 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlx 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1419,6 +1420,11 @@ version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "sql-builder"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "sqlformat"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2031,6 +2037,7 @@ dependencies = [
 "checksum siphasher 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "fa8f3741c7372e75519bd9346068370c9cdaabcc1f9599cbcf2a2719352286b7"
 "checksum slab 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 "checksum smallvec 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
+"checksum sql-builder 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "667868276b5d389fb7203ac096630710da87bc67f8f9c4326e77b65d1f306606"
 "checksum sqlformat 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5ce64a4576e1720a2e511bf3ccdb8c0f6cfed0fc265bcbaa0bd369485e02c631"
 "checksum sqlx 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8974cacd80085fbe49e778708d660dec6fb351604dc34c3905b26efb2803b038"
 "checksum sqlx-core 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "88ac5a436f941c42eac509471a730df5c3c58e1450e68cd39afedbd948206273"
