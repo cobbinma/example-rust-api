@@ -20,5 +20,5 @@ pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Int
     let pet: Pet = req.body_json().await?;
     req.state().db().create_pet(&pet).await?;
 
-    Ok(Response::new(StatusCode::Ok))
+    Ok(Response::new(StatusCode::Created))
 }
