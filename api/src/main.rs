@@ -5,6 +5,7 @@ use tide::{log, Response, StatusCode};
 
 mod handlers;
 mod state;
+mod error_response;
 
 use state::State;
 
