@@ -40,7 +40,15 @@ pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Int
             return Ok(Response::new(StatusCode::BadRequest).body_json(&ErrorResponse::from(e))?);
         }
     };
-    req.state().db().create_pet(&pet).await?;
 
-    Ok(Response::new(StatusCode::Created))
+    match req.state().db().create_pet(&pet).await {
+        Ok(()) => Ok(Response::new(StatusCode::Created)),
+        Err(e) => {
+            warn!("Error creating pet from database: {:?}", e);
+            Ok(
+                Response::new(StatusCode::InternalServerError)
+                    .body_json(&ErrorResponse::from(e))?,
+            )
+        }
+    }
 }
