@@ -1,5 +1,4 @@
 use async_std::prelude::*;
-use database;
 use database::postgres::Postgres;
 
 #[derive(Debug)]
