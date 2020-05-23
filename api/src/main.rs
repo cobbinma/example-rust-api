@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use std::fs;
 use tide::{log, Response, StatusCode};
 
+mod error_response;
 mod handlers;
 mod state;
 

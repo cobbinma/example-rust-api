@@ -15,6 +15,10 @@ impl DatabaseError {
             details: msg.to_string(),
         }
     }
+
+    pub fn detail(&self) -> String {
+        self.details.clone()
+    }
 }
 
 impl fmt::Display for DatabaseError {
