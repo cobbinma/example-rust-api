@@ -4,7 +4,7 @@ use std::env;
 
 use crate::db_error::DatabaseError;
 
-embed_migrations!("files/migrations");
+embed_migrations!("./../migrations");
 
 pub async fn run() -> Result<(), DatabaseError> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
