@@ -69,7 +69,9 @@ mod tests {
     use mockall::*;
     use models::pet::Pet;
     use models::repository::Repository;
+    use serde_json::json;
     use std::error::Error;
+    use tide::StatusCode;
 
     use crate::server::get_app;
     use crate::state::State;
@@ -162,5 +164,49 @@ mod tests {
             assert_eq!(name, pets[0].name);
             assert_eq!(Option::None, pets[0].tag);
         };
+    }
+
+    #[async_std::test]
+    async fn test_create_pet() {
+        let id: i32 = 1;
+        let name = "Tom";
+        let mut mock_db = MockDatabase::default();
+        mock_db
+            .expect_create_pet()
+            .with(predicate::eq(Pet {
+                id,
+                name: String::from(name),
+                tag: Option::None,
+            }))
+            .times(1)
+            .returning(move |_| Ok(()));
+        let app = get_app(Box::new(mock_db))
+            .await
+            .expect("could not create app");
+        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
+
+        let mut req = Request::new(
+            Method::Post,
+            Url::parse("http://127.0.0.1:8181/pet").unwrap(),
+        );
+
+        req.set_body(
+            json!({
+                "id": id,
+                "name": name
+            })
+            .to_string(),
+        );
+
+        let response = server.simulate(req).expect("could not simulate server");
+
+        assert_eq!(StatusCode::Created, response.status());
+        assert_eq!(
+            "",
+            response
+                .body_string()
+                .await
+                .expect("could not parsen response body")
+        )
     }
 }
