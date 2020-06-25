@@ -1,5 +1,3 @@
-use async_std::prelude::*;
-use database::postgres::Postgres;
 use models::repository::Repository;
 
 pub(crate) struct State {
@@ -7,10 +5,10 @@ pub(crate) struct State {
 }
 
 impl State {
-    pub(crate) async fn new() -> tide::Result<Self> {
-        let (db, ()) = Postgres::new().join(database::migration::run()).await;
-
-        Ok(Self { db: Box::new(db) })
+    pub(crate) async fn new(
+        repository: Box<dyn Repository + Send + Sync + 'static>,
+    ) -> tide::Result<Self> {
+        Ok(Self { db: repository })
     }
 
     pub fn db(&self) -> &Box<dyn Repository + Send + Sync + 'static> {
