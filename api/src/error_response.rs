@@ -35,3 +35,12 @@ impl From<IOError> for ErrorResponse {
         }
     }
 }
+
+impl From<Box<dyn std::error::Error>> for ErrorResponse {
+    fn from(item: Box<dyn std::error::Error>) -> Self {
+        ErrorResponse {
+            code: 3,
+            message: format!("{} : {}", "error parsing json body", item.to_string()),
+        }
+    }
+}
