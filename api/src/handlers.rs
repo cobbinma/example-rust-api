@@ -72,6 +72,7 @@ mod tests {
     use std::error::Error;
 
     use crate::handlers::get_pet;
+    use crate::server::get_server;
     use crate::state::State;
 
     mock! {
@@ -107,12 +108,9 @@ mod tests {
                 tag: None,
             })
         });
-        let state = State::new(Box::new(mock_db))
+        let app = get_server(Box::new(mock_db))
             .await
-            .expect("failed creating state in test");
-
-        let mut app = tide::with_state(state);
-        app.at("/pet/:id").get(get_pet);
+            .expect("could not create app");
         let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
 
         let response = server
