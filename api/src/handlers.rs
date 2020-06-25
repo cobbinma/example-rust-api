@@ -1,50 +1,60 @@
 use log::{trace, warn};
 use models::pet::Pet;
-use tide::{Request, Response, StatusCode};
+use tide::{Body, Request, Response, StatusCode};
 
 use crate::error_response::ErrorResponse;
 use crate::state::State;
 
-pub(crate) async fn get_pet(req: Request<State>) -> tide::Result<impl Into<Response>> {
+pub(crate) async fn get_pet(req: Request<State>) -> tide::Result {
     let id: i32 = match req.param("id") {
         Ok(id) => id,
         Err(e) => {
             trace!("Bad Request: {:?}", e);
-            return Ok(Response::new(StatusCode::BadRequest).body_json(&ErrorResponse::from(e))?);
+            let mut res = Response::new(StatusCode::BadRequest);
+            res.set_body(Body::from_json(&ErrorResponse::from(e))?);
+            return Ok(res);
         }
     };
 
     match req.state().db().get_pet(id).await {
-        Ok(pet) => Ok(Response::new(StatusCode::Ok).body_json(&pet)?),
+        Ok(pet) => {
+            let mut res = Response::new(StatusCode::Ok);
+            res.set_body(Body::from_json(&pet)?);
+            Ok(res)
+        }
         Err(e) => {
             warn!("Error getting pet from database: {:?}", e);
-            Ok(
-                Response::new(StatusCode::InternalServerError)
-                    .body_json(&ErrorResponse::from(e))?,
-            )
+            let mut res = Response::new(StatusCode::InternalServerError);
+            res.set_body(Body::from_json(&ErrorResponse::from(e))?);
+            Ok(res)
         }
     }
 }
 
-pub(crate) async fn get_pets(req: Request<State>) -> tide::Result<impl Into<Response>> {
+pub(crate) async fn get_pets(req: Request<State>) -> tide::Result {
     match req.state().db().find_all().await {
-        Ok(pets) => Ok(Response::new(StatusCode::Ok).body_json(&pets)?),
+        Ok(pets) => {
+            let mut res = Response::new(StatusCode::Ok);
+            res.set_body(Body::from_json(&pets)?);
+            Ok(res)
+        }
         Err(e) => {
             warn!("Error getting pets from database: {:?}", e);
-            Ok(
-                Response::new(StatusCode::InternalServerError)
-                    .body_json(&ErrorResponse::from(e))?,
-            )
+            let mut res = Response::new(StatusCode::InternalServerError);
+            res.set_body(Body::from_json(&ErrorResponse::from(e))?);
+            Ok(res)
         }
     }
 }
 
-pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Into<Response>> {
+pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<Response> {
     let pet: Pet = match req.body_json().await {
         Ok(pet) => pet,
         Err(e) => {
             trace!("Bad Request: {:?}", e);
-            return Ok(Response::new(StatusCode::BadRequest).body_json(&ErrorResponse::from(e))?);
+            let mut res = Response::new(StatusCode::BadRequest);
+            res.set_body(Body::from_json(&ErrorResponse::from(e))?);
+            return Ok(res);
         }
     };
 
@@ -52,10 +62,9 @@ pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Int
         Ok(()) => Ok(Response::new(StatusCode::Created)),
         Err(e) => {
             warn!("Error creating pet from database: {:?}", e);
-            Ok(
-                Response::new(StatusCode::InternalServerError)
-                    .body_json(&ErrorResponse::from(e))?,
-            )
+            let mut res = Response::new(StatusCode::InternalServerError);
+            res.set_body(Body::from_json(&ErrorResponse::from(e))?);
+            Ok(res)
         }
     }
 }
@@ -63,18 +72,16 @@ pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Int
 #[cfg(test)]
 mod tests {
     use async_trait::async_trait;
-    use http_service_mock::{make_server, TestBackend};
-    use http_types::{Method, Request, Url};
+    use http_types::Url;
     use mockall::predicate::*;
     use mockall::*;
     use models::pet::Pet;
     use models::repository::Repository;
     use serde_json::json;
     use std::error::Error;
-    use tide::StatusCode;
+    use tide::Response;
 
     use crate::server::get_app;
-    use crate::state::State;
 
     mock! {
         pub Database {
@@ -116,18 +123,22 @@ mod tests {
         let app = get_app(Box::new(mock_db))
             .await
             .expect("could not create app");
-        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
+        let mut req = http_types::Request::new(
+            http_types::Method::Get,
+            Url::parse("http://localhost:8181/pet/1").unwrap(),
+        );
+        req.set_body(
+            json!({
+                "id": id,
+                "name": name
+            })
+            .to_string(),
+        );
+        let mut res: Response = app.respond(req).await.unwrap();
 
-        let response = server
-            .simulate(Request::new(
-                Method::Get,
-                Url::parse("http://127.0.0.1:8181/pet/1").unwrap(),
-            ))
-            .expect("could not simulate server");
+        assert_eq!(200, res.status());
+        let body = res.take_body().into_string().await.unwrap();
 
-        assert_eq!(StatusCode::Ok, response.status());
-
-        let body = response.body_string().await.unwrap();
         if let Ok(pet) = serde_json::from_str::<Pet>(&body) {
             assert_eq!(id, pet.id);
             assert_eq!(name, pet.name);
@@ -150,18 +161,16 @@ mod tests {
         let app = get_app(Box::new(mock_db))
             .await
             .expect("could not create app");
-        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
+        let req = http_types::Request::new(
+            http_types::Method::Get,
+            Url::parse("http://localhost:8181/pets").unwrap(),
+        );
 
-        let response = server
-            .simulate(Request::new(
-                Method::Get,
-                Url::parse("http://127.0.0.1:8181/pets").unwrap(),
-            ))
-            .expect("could not simulate server");
+        let mut res: Response = app.respond(req).await.unwrap();
 
-        assert_eq!(StatusCode::Ok, response.status());
+        assert_eq!(200, res.status());
 
-        let body = response.body_string().await.unwrap();
+        let body = res.take_body().into_string().await.unwrap();
         if let Ok(pets) = serde_json::from_str::<Vec<Pet>>(&body) {
             assert_eq!(1, pets.len());
             assert_eq!(id, pets[0].id);
@@ -187,13 +196,10 @@ mod tests {
         let app = get_app(Box::new(mock_db))
             .await
             .expect("could not create app");
-        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
-
-        let mut req = Request::new(
-            Method::Post,
-            Url::parse("http://127.0.0.1:8181/pet").unwrap(),
+        let mut req = http_types::Request::new(
+            http_types::Method::Post,
+            Url::parse("http://localhost:8181/pet").unwrap(),
         );
-
         req.set_body(
             json!({
                 "id": id,
@@ -202,15 +208,10 @@ mod tests {
             .to_string(),
         );
 
-        let response = server.simulate(req).expect("could not simulate server");
+        let mut res: Response = app.respond(req).await.unwrap();
 
-        assert_eq!(StatusCode::Created, response.status());
-        assert_eq!(
-            "",
-            response
-                .body_string()
-                .await
-                .expect("could not parsen response body")
-        )
+        assert_eq!(201, res.status());
+        let body = res.take_body().into_string().await.unwrap();
+        assert_eq!("", body);
     }
 }

@@ -44,3 +44,12 @@ impl From<Box<dyn std::error::Error>> for ErrorResponse {
         }
     }
 }
+
+impl From<http_types::Error> for ErrorResponse {
+    fn from(item: http_types::Error) -> Self {
+        ErrorResponse {
+            code: 3,
+            message: format!("{} : {}", "error parsing json body", item.to_string()),
+        }
+    }
+}
