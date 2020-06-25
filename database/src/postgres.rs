@@ -1,12 +1,12 @@
+use async_trait::async_trait;
 use models::pet::Pet;
+use models::repository::Repository;
 use sql_builder::prelude::*;
 use sqlx::postgres::PgQueryAs;
 use sqlx::PgPool;
 use std::env;
 use std::error::Error;
 use std::result::Result;
-use models::repository::Repository;
-use async_trait::async_trait;
 
 use crate::db_error::DatabaseError;
 
@@ -18,11 +18,12 @@ pub struct Postgres {
 impl Postgres {
     pub async fn new() -> Self {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-        let pool = PgPool::new(&database_url).await.expect("could not create postgres connnection pool");
+        let pool = PgPool::new(&database_url)
+            .await
+            .expect("could not create postgres connnection pool");
 
         Postgres { pool }
     }
-
 }
 
 #[async_trait]
@@ -31,7 +32,8 @@ impl Repository for Postgres {
         let sql = SqlBuilder::select_from("pets")
             .fields(&["id", "name", "tag"])
             .and_where("id = ?".bind(&id))
-            .sql().map_err(DatabaseError::from)?;
+            .sql()
+            .map_err(DatabaseError::from)?;
 
         let pet = sqlx::query_as::<_, Pet>(&sql).fetch_one(&self.pool).await?;
 
@@ -44,7 +46,8 @@ impl Repository for Postgres {
             .field("name")
             .field("tag")
             .values(&["$1, $2, $3"])
-            .sql().map_err(DatabaseError::from)?;
+            .sql()
+            .map_err(DatabaseError::from)?;
 
         let mut tx = self.pool.begin().await?;
 
@@ -63,7 +66,8 @@ impl Repository for Postgres {
         let sql = SqlBuilder::select_from("pets")
             .fields(&["id", "name", "tag"])
             .order_by("id", false)
-            .sql().map_err(DatabaseError::from)?;
+            .sql()
+            .map_err(DatabaseError::from)?;
 
         let pets = sqlx::query_as::<_, Pet>(&sql).fetch_all(&self.pool).await?;
 

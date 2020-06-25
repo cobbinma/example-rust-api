@@ -1,4 +1,6 @@
+use async_std::prelude::*;
 use async_std::task;
+use database::postgres::Postgres;
 use dotenv::dotenv;
 use std::fs;
 use tide::{log, Response, StatusCode};
@@ -16,7 +18,9 @@ fn main() -> tide::Result<()> {
             .unwrap();
         dotenv().ok();
 
-        let state = State::new().await?;
+        let (db, ()) = Postgres::new().join(database::migration::run()).await;
+
+        let state = State::new(Box::new(db)).await?;
         let mut app = tide::with_state(state);
 
         app.at("/pets").get(handlers::get_pets);

@@ -59,3 +59,76 @@ pub(crate) async fn create_pet(mut req: Request<State>) -> tide::Result<impl Int
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use async_trait::async_trait;
+    use http_service_mock::{make_server, TestBackend};
+    use http_types::{Method, Request, Url};
+    use mockall::predicate::*;
+    use mockall::*;
+    use models::pet::Pet;
+    use models::repository::Repository;
+    use std::error::Error;
+
+    use crate::handlers::get_pet;
+    use crate::state::State;
+
+    mock! {
+        pub Database {
+            fn get_pet(&self, id: i32) -> Result<Pet, Box<dyn Error>> {}
+            fn create_pet(&self, pet: &Pet) -> Result<(), Box<dyn Error>> {}
+            fn find_all(&self) -> Result<Vec<Pet>, Box<dyn Error>> {}
+        }
+    }
+
+    #[async_trait]
+    impl Repository for MockDatabase {
+        async fn get_pet(&self, id: i32) -> Result<Pet, Box<dyn Error>> {
+            self.get_pet(id)
+        }
+        async fn create_pet(&self, pet: &Pet) -> Result<(), Box<dyn Error>> {
+            self.create_pet(pet)
+        }
+        async fn find_all(&self) -> Result<Vec<Pet>, Box<dyn Error>> {
+            self.find_all()
+        }
+    }
+
+    #[async_std::test]
+    async fn test_get_pet() -> std::io::Result<()> {
+        let id: i32 = 1;
+        let name = "Tom";
+        let mut mock_db = MockDatabase::default();
+        mock_db.expect_get_pet().times(1).returning(move |_| {
+            Ok(Pet {
+                id,
+                name: String::from(name),
+                tag: None,
+            })
+        });
+        let state = State::new(Box::new(mock_db))
+            .await
+            .expect("failed creating state in test");
+
+        let mut app = tide::with_state(state);
+        app.at("/pet/:id").get(get_pet);
+        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
+
+        let response = server
+            .simulate(Request::new(
+                Method::Get,
+                Url::parse("http://127.0.0.1:8181/pet/1").unwrap(),
+            ))
+            .expect("could not simulate server");
+
+        let body = response.body_string().await.unwrap();
+        if let Ok(pet) = serde_json::from_str::<Pet>(&body) {
+            assert_eq!(id, pet.id);
+            assert_eq!(name, pet.name);
+            assert_eq!(Option::None, pet.tag);
+        };
+
+        Ok(())
+    }
+}
