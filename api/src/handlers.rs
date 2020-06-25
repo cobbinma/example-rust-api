@@ -125,6 +125,8 @@ mod tests {
             ))
             .expect("could not simulate server");
 
+        assert_eq!(StatusCode::Ok, response.status());
+
         let body = response.body_string().await.unwrap();
         if let Ok(pet) = serde_json::from_str::<Pet>(&body) {
             assert_eq!(id, pet.id);
@@ -156,6 +158,8 @@ mod tests {
                 Url::parse("http://127.0.0.1:8181/pets").unwrap(),
             ))
             .expect("could not simulate server");
+
+        assert_eq!(StatusCode::Ok, response.status());
 
         let body = response.body_string().await.unwrap();
         if let Ok(pets) = serde_json::from_str::<Vec<Pet>>(&body) {
