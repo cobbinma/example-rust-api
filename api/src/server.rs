@@ -5,7 +5,7 @@ use tide::{Response, Server, StatusCode};
 use crate::handlers;
 use crate::State;
 
-pub(crate) async fn get_server(
+pub(crate) async fn get_app(
     repository: Box<dyn Repository + Send + Sync + 'static>,
 ) -> tide::Result<Server<State>> {
     let state = State::new(repository).await?;
@@ -18,7 +18,7 @@ pub(crate) async fn get_server(
     app.at("/healthz")
         .get(|_| async { Ok(Response::new(StatusCode::Ok)) });
     app.at("/oas")
-        .get(|_| async { Ok(fs::read_to_string("files/oas/v1.yaml")?) });
+        .get(|_| async { Ok(fs::read_to_string("oas/v1.yaml")?) });
 
     Ok(app)
 }

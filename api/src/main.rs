@@ -9,7 +9,7 @@ mod handlers;
 mod server;
 mod state;
 
-use server::get_server;
+use server::get_app;
 use state::State;
 
 fn main() -> tide::Result<()> {
@@ -21,7 +21,7 @@ fn main() -> tide::Result<()> {
 
         let (db, ()) = Postgres::new().join(database::migration::run()).await;
 
-        let app = get_server(Box::new(db)).await?;
+        let app = get_app(Box::new(db)).await?;
 
         app.listen("127.0.0.1:8181").await?;
         Ok(())

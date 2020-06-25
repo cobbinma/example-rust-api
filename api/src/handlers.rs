@@ -71,8 +71,7 @@ mod tests {
     use models::repository::Repository;
     use std::error::Error;
 
-    use crate::handlers::get_pet;
-    use crate::server::get_server;
+    use crate::server::get_app;
     use crate::state::State;
 
     mock! {
@@ -108,7 +107,7 @@ mod tests {
                 tag: None,
             })
         });
-        let app = get_server(Box::new(mock_db))
+        let app = get_app(Box::new(mock_db))
             .await
             .expect("could not create app");
         let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
