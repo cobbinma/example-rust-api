@@ -96,17 +96,21 @@ mod tests {
     }
 
     #[async_std::test]
-    async fn test_get_pet() -> std::io::Result<()> {
+    async fn test_get_pet() {
         let id: i32 = 1;
         let name = "Tom";
         let mut mock_db = MockDatabase::default();
-        mock_db.expect_get_pet().times(1).returning(move |_| {
-            Ok(Pet {
-                id,
-                name: String::from(name),
-                tag: None,
-            })
-        });
+        mock_db
+            .expect_get_pet()
+            .with(predicate::eq(id))
+            .times(1)
+            .returning(move |_| {
+                Ok(Pet {
+                    id,
+                    name: String::from(name),
+                    tag: None,
+                })
+            });
         let app = get_app(Box::new(mock_db))
             .await
             .expect("could not create app");
@@ -125,7 +129,5 @@ mod tests {
             assert_eq!(name, pet.name);
             assert_eq!(Option::None, pet.tag);
         };
-
-        Ok(())
     }
 }
