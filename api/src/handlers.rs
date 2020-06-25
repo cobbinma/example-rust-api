@@ -130,4 +130,37 @@ mod tests {
             assert_eq!(Option::None, pet.tag);
         };
     }
+
+    #[async_std::test]
+    async fn test_get_pets() {
+        let id: i32 = 1;
+        let name = "Tom";
+        let mut mock_db = MockDatabase::default();
+        mock_db.expect_find_all().times(1).returning(move || {
+            Ok(vec![Pet {
+                id,
+                name: String::from(name),
+                tag: Option::None,
+            }])
+        });
+        let app = get_app(Box::new(mock_db))
+            .await
+            .expect("could not create app");
+        let mut server: TestBackend<tide::Server<State>> = make_server(app.into()).unwrap();
+
+        let response = server
+            .simulate(Request::new(
+                Method::Get,
+                Url::parse("http://127.0.0.1:8181/pets").unwrap(),
+            ))
+            .expect("could not simulate server");
+
+        let body = response.body_string().await.unwrap();
+        if let Ok(pets) = serde_json::from_str::<Vec<Pet>>(&body) {
+            assert_eq!(1, pets.len());
+            assert_eq!(id, pets[0].id);
+            assert_eq!(name, pets[0].name);
+            assert_eq!(Option::None, pets[0].tag);
+        };
+    }
 }
