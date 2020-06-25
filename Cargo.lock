@@ -405,6 +405,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "database"
 version = "0.1.0"
 dependencies = [
+ "async-trait 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "models 0.1.0",
  "postgres 0.17.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "refinery 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",

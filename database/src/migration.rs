@@ -2,14 +2,12 @@ use postgres::{Client, NoTls};
 use refinery::embed_migrations;
 use std::env;
 
-use crate::db_error::DatabaseError;
-
 embed_migrations!("./migrations");
 
-pub async fn run() -> Result<(), DatabaseError> {
+pub async fn run() -> () {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let mut client = Client::connect(&database_url, NoTls)?;
+    let mut client = Client::connect(&database_url, NoTls).expect("could not connect to database");
 
-    migrations::runner().run(&mut client)?;
-    Ok(())
+    migrations::runner().run(&mut client).expect("could not run migrations");
+    ()
 }
